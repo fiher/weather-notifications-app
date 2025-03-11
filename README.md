@@ -20,6 +20,7 @@ A Laravel-based REST API service that provides weather information and manages w
 - **Testing**: PHPUnit
 - **External Services**: Weather API Integration
 - **Queue System**: Laravel Queue (for email notifications)
+- **Mail Testing**: MailHog
 
 ## Prerequisites
 
@@ -51,6 +52,13 @@ A Laravel-based REST API service that provides weather information and manages w
    ```bash
    docker-compose up -d
    ```
+   This will start:
+   - Main application container
+   - Nginx web server
+   - MySQL database
+   - MailHog for email testing
+   - Scheduler for automated notifications
+   - Queue worker for processing notifications
 
 5. Install dependencies:
    ```bash
@@ -87,6 +95,24 @@ A Laravel-based REST API service that provides weather information and manages w
 - `DELETE /api/subscriptions/{id}` - Delete subscription
 - `POST /api/subscriptions/unsubscribe/{id}` - Deactivate subscription
 
+## Automated Weather Notifications
+
+The application automatically sends weather notifications to subscribers at their preferred notification times:
+
+- Notifications are sent daily at the time specified by each subscriber
+- Each notification includes:
+  - Current weather conditions
+  - Temperature
+  - Weather description
+  - Wind information
+  - Humidity levels
+  - Unsubscribe link
+
+The notification system is handled by:
+- A scheduler container that checks for pending notifications every minute
+- A queue worker container that processes and sends the notifications
+- MailHog for catching emails in development (accessible at http://localhost:8025)
+
 ## Testing
 
 Run the test suite:
@@ -112,8 +138,8 @@ docker-compose exec app php artisan test --filter=WeatherControllerTest
    
    # View container logs
    docker-compose logs -f app
-   docker-compose logs -f nginx
-   docker-compose logs -f mysql
+   docker-compose logs -f scheduler
+   docker-compose logs -f queue
    ```
 
 2. **Database Issues**
@@ -130,14 +156,15 @@ docker-compose exec app php artisan test --filter=WeatherControllerTest
    # Monitor queues
    docker-compose exec app php artisan queue:monitor
    
-   # Restart queue worker
-   docker-compose exec app php artisan queue:restart
+   # View failed jobs
+   docker-compose exec app php artisan queue:failed
    ```
 
-4. **Laravel Logs**
-   - Check logs at `storage/logs/laravel.log`
+4. **Email Issues**
+   - Check MailHog interface at http://localhost:8025
+   - View email logs in the queue worker container:
    ```bash
-   docker-compose exec app tail -f storage/logs/laravel.log
+   docker-compose logs -f queue
    ```
 
 ### Development Tools
@@ -151,24 +178,6 @@ docker-compose exec app php artisan test --filter=WeatherControllerTest
    ```bash
    docker-compose exec app php artisan tinker
    ```
-
-## Maintenance
-
-### Queue Worker
-
-The application uses queues for sending email notifications. Ensure the queue worker is running:
-
-```bash
-docker-compose exec app php artisan queue:work
-```
-
-### Scheduled Tasks
-
-To run the scheduler for notifications:
-
-```bash
-docker-compose exec app php artisan schedule:work
-```
 
 ## Contributing
 

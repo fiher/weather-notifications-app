@@ -16,6 +16,38 @@ services:
       - mysql
       - mailhog
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: weather-scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - weather-network
+    depends_on:
+      - app
+      - mysql
+    command: php artisan schedule:work
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: weather-queue
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - weather-network
+    depends_on:
+      - app
+      - mysql
+    command: php artisan queue:work --tries=3 --timeout=90
+
   nginx:
     image: nginx:alpine
     container_name: weather-nginx
