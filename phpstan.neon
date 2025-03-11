@@ -1,0 +1,22 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    level: 3
+    paths:
+        - app
+        - tests
+
+    ignoreErrors:
+        # Laravel Model property access
+        - '#Access to an undefined property [a-zA-Z0-9\\_]+::\$[a-zA-Z_]+#'
+        
+        # Mockery calls
+        - '#Call to an undefined method [a-zA-Z0-9\\_]+::shouldReceive\(\)#'
+        - '#Call to an undefined method Mockery\\ExpectationInterface|Mockery\\Expectation#'
+        
+        # Laravel Resource properties
+        - '#Access to an undefined property App\\Http\\Resources\\[a-zA-Z0-9\\_]+::\$[a-zA-Z_]+#'
+        
+        # Property type hints in tests
+        - '#Property [a-zA-Z0-9\\_]+::\$[a-zA-Z_]+ \([a-zA-Z0-9\\_]+\) does not accept [a-zA-Z0-9\\_]+#' 

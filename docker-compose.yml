@@ -1,0 +1,66 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: weather-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - weather-network
+    depends_on:
+      - mysql
+      - mailhog
+
+  nginx:
+    image: nginx:alpine
+    container_name: weather-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - weather-network
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    container_name: weather-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: weather_app
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_PASSWORD: weather_password
+      MYSQL_USER: weather_user
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - weather-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: weather-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - weather-network
+
+networks:
+  weather-network:
+    driver: bridge
+
+volumes:
+  weather-mysql:
+    driver: local
+  mysql_data:
+    driver: local 
